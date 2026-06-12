@@ -1,5 +1,7 @@
 # NariSafe — Women Safety Risk Awareness
 
+**Live Demo:** https://narisafe-risk-awareness.streamlit.app/
+
 NariSafe is a public-data-based women safety risk-awareness prototype for Indian cities.
 
 It combines **NCRB crime statistics** (2021–2023), **OpenStreetMap urban infrastructure** data and engineered contextual features to classify a given situation —> city, time, area type, complaint type —> into a risk-awareness level:
