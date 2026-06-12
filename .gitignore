@@ -1,0 +1,57 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+
+# System
+.DS_Store
+
+# Environment
+.env
+.env.local
+
+# Hugging Face temporary upload folders
+hf_upload/
+
+# Raw and intermediate data
+data/raw/
+data/intermediate/
+data/processed/audit/
+
+# Large processed datasets
+data/processed/*.csv
+data/processed/ml_ready/*.csv
+data/processed/ml_ready_no_location/*.csv
+data/processed/ml_ready/splits/
+data/processed/ml_ready_no_location/splits/
+
+# Keep only lightweight feature configs
+!data/processed/ml_ready/feature_config.json
+!data/processed/ml_ready_no_location/feature_config_no_location.json
+
+# Model files
+models/baselines/
+models/no_location_baselines/*.joblib
+
+# Keep model folders if needed, but not heavy joblib files
+!models/.gitkeep
+!models/no_location_baselines/.gitkeep
+
+# Reports: ignore most generated reports
+reports/ml/*.md
+reports/ml/*.csv
+reports/ml_no_location/*.md
+reports/ml_no_location/*.csv
+
+# Keep selected reports
+!reports/ml/feature_importance.csv
+!reports/ml_no_location/high_threshold_tuning.csv
+!reports/ml_no_location/baseline_model_report.md
+
+# Do not push script 20 yet
+scripts/20_tune_hist_gradient_boosting.py

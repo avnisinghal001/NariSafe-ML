@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NariSafe — Risk Predictor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Reset & base ─────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --purple:   #7C3AED;
+      --indigo:   #4F46E5;
+      --high:     #EF4444;
+      --high-bg:  #FEF2F2;
+      --medium:   #F59E0B;
+      --medium-bg:#FFFBEB;
+      --low:      #10B981;
+      --low-bg:   #ECFDF5;
+      --bg:       #F1F5F9;
+      --card:     #FFFFFF;
+      --text:     #1E293B;
+      --muted:    #64748B;
+      --border:   #E2E8F0;
+      --radius:   14px;
+      --shadow:   0 4px 24px rgba(0,0,0,.08);
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 60px;
+    }
+
+    /* ── Header ───────────────────────────────────────────────────────── */
+    header {
+      background: linear-gradient(135deg, #4F46E5, #7C3AED 60%, #9333EA);
+      color: #fff;
+      padding: 40px 24px 36px;
+      text-align: center;
+    }
+    .header-icon { font-size: 2.4rem; margin-bottom: 8px; }
+    header h1   { font-size: 2rem; font-weight: 800; letter-spacing: -.5px; }
+    header p    { margin-top: 8px; font-size: .95rem; opacity: .85; max-width: 520px; margin-inline: auto; }
+
+    /* ── Main container ───────────────────────────────────────────────── */
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+
+    /* ── Cards ────────────────────────────────────────────────────────── */
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 28px;
+      margin-top: 24px;
+    }
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ── Form grid ────────────────────────────────────────────────────── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px;
+    }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    label  { font-size: .8rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; }
+    select {
+      appearance: none;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center, #F8FAFC;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 36px 10px 12px;
+      font-size: .92rem;
+      font-family: inherit;
+      color: var(--text);
+      cursor: pointer;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    select:focus { outline: none; border-color: var(--purple); box-shadow: 0 0 0 3px rgba(124,58,237,.15); }
+
+    /* ── Button ───────────────────────────────────────────────────────── */
+    .btn-predict {
+      margin-top: 24px;
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--indigo), var(--purple));
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      letter-spacing: .3px;
+      transition: opacity .15s, transform .1s;
+    }
+    .btn-predict:hover   { opacity: .92; transform: translateY(-1px); }
+    .btn-predict:active  { transform: translateY(0); }
+    .btn-predict:disabled { opacity: .6; cursor: not-allowed; }
+
+    /* ── Error banner ─────────────────────────────────────────────────── */
+    #error-banner {
+      display: none;
+      background: #FEF2F2;
+      border: 1px solid #FECACA;
+      border-radius: 8px;
+      color: #B91C1C;
+      padding: 12px 16px;
+      margin-top: 16px;
+      font-size: .9rem;
+    }
+
+    /* ── Result section ───────────────────────────────────────────────── */
+    #result-section { display: none; }
+
+    /* Risk badge */
+    .risk-badge-wrap { text-align: center; padding: 28px 0 20px; }
+    .risk-label-text { font-size: .75rem; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+    .risk-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 36px;
+      border-radius: 100px;
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .risk-badge.high   { background: var(--high-bg);   color: var(--high);   border: 2px solid var(--high); }
+    .risk-badge.medium { background: var(--medium-bg); color: var(--medium); border: 2px solid var(--medium); }
+    .risk-badge.low    { background: var(--low-bg);    color: var(--low);    border: 2px solid var(--low); }
+
+    /* ── Probability bars ─────────────────────────────────────────────── */
+    .prob-row { display: flex; flex-direction: column; gap: 10px; }
+    .prob-item { display: flex; align-items: center; gap: 12px; }
+    .prob-name { font-size: .82rem; font-weight: 600; text-transform: capitalize; width: 60px; flex-shrink: 0; }
+    .prob-bar-bg { flex: 1; background: #F1F5F9; border-radius: 100px; height: 10px; overflow: hidden; }
+    .prob-bar { height: 100%; border-radius: 100px; transition: width .6s cubic-bezier(.4,0,.2,1); }
+    .prob-bar.high   { background: var(--high); }
+    .prob-bar.medium { background: var(--medium); }
+    .prob-bar.low    { background: var(--low); }
+    .prob-pct { font-size: .82rem; font-weight: 700; width: 44px; text-align: right; flex-shrink: 0; }
+    .prob-pct.high   { color: var(--high); }
+    .prob-pct.medium { color: var(--medium); }
+    .prob-pct.low    { color: var(--low); }
+
+    /* ── Context grid ─────────────────────────────────────────────────── */
+    .ctx-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 600px) { .ctx-grid { grid-template-columns: 1fr; } }
+
+    .ctx-block { background: #F8FAFC; border-radius: 10px; padding: 16px; }
+    .ctx-block h4 { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--purple); margin-bottom: 12px; }
+    .ctx-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: .85rem; }
+    .ctx-row:last-child { border-bottom: none; }
+    .ctx-key { color: var(--muted); }
+    .ctx-val { font-weight: 600; text-align: right; max-width: 55%; }
+
+    /* ── Severity badge ───────────────────────────────────────────────── */
+    .sev-badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 100px;
+      font-size: .78rem;
+      font-weight: 700;
+    }
+    .sev-3 { background: #FEE2E2; color: #B91C1C; }
+    .sev-2 { background: #FEF3C7; color: #92400E; }
+    .sev-1 { background: #D1FAE5; color: #065F46; }
+
+    /* ── Score bar (infra) ────────────────────────────────────────────── */
+    .score-dots { display: flex; gap: 4px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); }
+    .dot.filled { background: var(--purple); }
+
+    /* ── Explanation sections ─────────────────────────────────────────── */
+    .expl-section { margin-bottom: 18px; }
+    .expl-section:last-child { margin-bottom: 0; }
+    .expl-heading {
+      font-size: .78rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .8px; margin-bottom: 10px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .expl-heading.risk  { color: #B91C1C; }
+    .expl-heading.mit   { color: #065F46; }
+    .expl-heading.lim   { color: #1E40AF; }
+    .expl-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .expl-list li {
+      display: flex; align-items: flex-start; gap: 10px;
+      border-radius: 8px; padding: 9px 13px;
+      font-size: .87rem; line-height: 1.5;
+    }
+    .expl-list li.risk { background: #FEF2F2; color: #7F1D1D; }
+    .expl-list li.mit  { background: #ECFDF5; color: #14532D; }
+    .expl-list li.lim  { background: #EFF6FF; color: #1E3A8A; }
+    .expl-icon { flex-shrink: 0; font-size: .95rem; margin-top: 1px; }
+    .expl-divider { border: none; border-top: 1px dashed var(--border); margin: 16px 0; }
+
+    /* ── Warning & disclaimer ─────────────────────────────────────────── */
+    .warning-box {
+      background: #FFFBEB;
+      border: 1.5px solid #FDE68A;
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-size: .84rem;
+      color: #78350F;
+      line-height: 1.55;
+    }
+    .disclaimer-box {
+      background: #F1F5F9;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-size: .82rem;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+    .box-title { font-weight: 700; margin-bottom: 4px; }
+
+    /* ── Loading spinner ──────────────────────────────────────────────── */
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2.5px solid rgba(255,255,255,.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      display: inline-block; vertical-align: middle; margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Divider ──────────────────────────────────────────────────────── */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 4px 0; }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ──────────────────────────────────────────────────────────────── -->
+<header>
+  <div class="header-icon">🛡️</div>
+  <h1>NariSafe Risk Awareness</h1>
+  <p>City-level women safety risk analysis using NCRB crime data &amp; urban infrastructure</p>
+</header>
+
+<div class="container">
+
+  <!-- ── Input form ─────────────────────────────────────────────────────────── -->
+  <div class="card">
+    <div class="card-title">🔍 Enter Context Details</div>
+
+    <div class="form-grid" id="form-grid">
+      <div class="field">
+        <label for="city">City</label>
+        <select id="city"><option value="">Loading…</option></select>
+      </div>
+      <div class="field">
+        <label for="day">Day of Week</label>
+        <select id="day"><option value="">Loading…</option></select>
+      </div>
+      <div class="field">
+        <label for="hour">Hour</label>
+        <select id="hour"><option value="">Loading…</option></select>
+      </div>
+      <div class="field">
+        <label for="area">Area Context</label>
+        <select id="area"><option value="">Loading…</option></select>
+      </div>
+      <div class="field">
+        <label for="complaint">Complaint Type</label>
+        <select id="complaint"><option value="">Loading…</option></select>
+      </div>
+    </div>
+
+    <button class="btn-predict" id="predict-btn" onclick="runPredict()">
+      Analyse Risk
+    </button>
+    <div id="error-banner"></div>
+  </div>
+
+  <!-- ── Result section ─────────────────────────────────────────────────────── -->
+  <div id="result-section">
+
+    <!-- Risk badge -->
+    <div class="card">
+      <div class="risk-badge-wrap">
+        <div class="risk-label-text">Risk Awareness Level</div>
+        <div class="risk-badge" id="risk-badge">—</div>
+      </div>
+      <hr class="divider" />
+
+      <!-- Probability bars -->
+      <div style="margin-top:20px;">
+        <div class="card-title" style="margin-bottom:14px;">Model Confidence: </div>
+        <div class="prob-row" id="prob-row"></div>
+      </div>
+    </div>
+
+    <!-- Explanation context -->
+    <div class="card">
+      <div class="card-title">📋 Context Breakdown</div>
+      <div class="ctx-grid" id="ctx-grid"></div>
+    </div>
+
+    <!-- Explanation (3 sections) -->
+    <div class="card" id="explanation-card"></div>
+
+    <!-- Warning + Disclaimer -->
+    <div class="card">
+      <div class="warning-box">
+        <div class="box-title">⚠️ Important Warning</div>
+        <div id="warning-text"></div>
+      </div>
+      <div class="disclaimer-box" style="margin-top:12px;">
+        <div class="box-title">ℹ️ Disclaimer</div>
+        <div id="disclaimer-text"></div>
+      </div>
+    </div>
+
+  </div><!-- /result-section -->
+
+</div><!-- /container -->
+
+<script>
+const API = '';  // same origin; FastAPI serves both
+
+// ── Domestic/private-context complaint types to hide from public-area dropdown ─
+const DOMESTIC_TYPES = new Set([
+  'cruelty_by_husband_or_relatives',
+  'dowry_deaths',
+  'dowry_prohibition_act',
+  'domestic_violence_act',
+  'abetment_to_suicide_of_women',
+]);
+
+// ── Icon pickers for explanation items ───────────────────────────────────────
+const RISK_ICONS = [
+  [/late.night|evening/i,      '🌙'],
+  [/severity/i,                '⚠️'],
+  [/concentration|share|%/i,  '📊'],
+  [/crowd/i,                   '👥'],
+  [/crime rate|very high|elevated/i, '🏙️'],
+  [/lighting|poorly lit/i,     '💡'],
+  [/police|station/i,          '🚔'],
+  [/transport|isolated/i,      '🚌'],
+  [/trending up/i,             '📈'],
+];
+const MIT_ICONS = [
+  [/daytime/i,     '☀️'],
+  [/lower.sev/i,   '✅'],
+  [/low share/i,   '📉'],
+  [/crowd.*high/i, '👥'],
+  [/low.*crime|relatively low/i, '📉'],
+  [/lighting|well.lit/i, '💡'],
+  [/police|station/i,    '🚔'],
+  [/transport/i,         '🚌'],
+  [/declining/i,         '📉'],
+];
+function pickIcon(text, iconMap) {
+  for (const [pat, icon] of iconMap) if (pat.test(text)) return icon;
+  return '•';
+}
+
+// ── Severity label ────────────────────────────────────────────────────────────
+function sevLabel(n) {
+  return n === 3 ? `<span class="sev-badge sev-3">High</span>`
+       : n === 2 ? `<span class="sev-badge sev-2">Medium</span>`
+                 : `<span class="sev-badge sev-1">Low</span>`;
+}
+
+// ── Score dots ─────────────────────────────────────────────────────────────────
+function scoreDots(val, max) {
+  return `<span class="score-dots">${Array.from({length:max}, (_,i) =>
+    `<span class="dot${i < val ? ' filled' : ''}"></span>`).join('')}</span>`;
+}
+
+// ── Populate dropdowns from /metadata ────────────────────────────────────────
+async function loadMetadata() {
+  const res  = await fetch(`${API}/metadata`);
+  const meta = await res.json();
+
+  const cityEl = document.getElementById('city');
+  cityEl.innerHTML = meta.cities.map(c => `<option value="${c}">${c}</option>`).join('');
+
+  const dayEl = document.getElementById('day');
+  dayEl.innerHTML = meta.days.map(d => `<option value="${d}">${d}</option>`).join('');
+
+  const hourEl = document.getElementById('hour');
+  const hourLabels = { 6:'6:00 AM', 9:'9:00 AM', 12:'12:00 PM', 15:'3:00 PM', 18:'6:00 PM', 21:'9:00 PM', 23:'11:00 PM' };
+  hourEl.innerHTML = meta.hours.map(h => `<option value="${h}">${hourLabels[h] || h+':00'}</option>`).join('');
+
+  const areaEl = document.getElementById('area');
+  areaEl.innerHTML = meta.area_contexts.map(a =>
+    `<option value="${a}">${a.charAt(0).toUpperCase()+a.slice(1)}</option>`
+  ).join('');
+
+  const cmpEl = document.getElementById('complaint');
+  const publicTypes = meta.complaint_types.filter(ct => !DOMESTIC_TYPES.has(ct.value));
+  cmpEl.innerHTML = publicTypes.map(ct =>
+    `<option value="${ct.value}">${ct.label}</option>`
+  ).join('');
+}
+
+// ── Build context grid ────────────────────────────────────────────────────────
+function buildCtxGrid(ctx) {
+  const cc = ctx.city_context;
+  const tc = ctx.time_context;
+  const ac = ctx.area_context;
+  const qc = ctx.complaint_context;
+  const ic = ctx.infrastructure;
+
+  const block = (title, rows) => `
+    <div class="ctx-block">
+      <h4>${title}</h4>
+      ${rows.map(([k,v]) => `<div class="ctx-row"><span class="ctx-key">${k}</span><span class="ctx-val">${v}</span></div>`).join('')}
+    </div>`;
+
+  return [
+    block('🏙️ City Crime (2023)', [
+      ['Crime Rate',        `${cc.women_crime_rate_2023.toFixed(1)} / lakh`],
+      ['Total Cases',       cc.women_crime_2023.toLocaleString()],
+      ['Growth (21→23)',    (cc.women_crime_growth_pct > 0 ? '+' : '') + cc.women_crime_growth_pct + '%'],
+      ['Population',        cc.population_lakhs + ' Lakhs'],
+      ['Chargesheeting',    cc.chargesheeting_rate + '%'],
+    ]),
+    block('⏰ Time & Area', [
+      ['Day',          tc.day_of_week + (tc.is_weekend ? ' 🗓️' : '')],
+      ['Hour',         tc.hour + ':00'],
+      ['Time Window',  tc.time_bucket.replace('_',' ')],
+      ['Area Type',    ac.area_type],
+      ['Crowd',        ac.crowd_density],
+    ]),
+    block('📂 Complaint Type', [
+      ['Type',         qc.complaint_type],
+      ['Severity by crime type',     sevLabel(qc.severity_level)],
+      ['Cases (2023)', qc.cases_in_city_2023.toLocaleString()],
+      ['City Share',   qc.share_of_city_crimes_pct + '%'],
+    ]),
+    block('🏗️ Infrastructure', [
+      ['Lighting',     ic.lighting_data_available
+                         ? scoreDots(ic.lighting_score, 5) + ` (${ic.lighting_score}/5)`
+                         : 'Unknown / estimated (OSM data unavailable)'],
+      ['Police Score', scoreDots(ic.police_access_score, 3) + ` (${ic.police_access_score}/3)`],
+      ['Nearest PS',   ic.nearest_police_km + ' km'],
+      ['Transport',    scoreDots(ic.transport_access_score, 3) + ` (${ic.transport_access_score}/3)`],
+      ['Stations 5km', ic.police_stations_5km],
+    ]),
+  ].join('');
+}
+
+// ── Run prediction ────────────────────────────────────────────────────────────
+async function runPredict() {
+  const city  = document.getElementById('city').value;
+  const day   = document.getElementById('day').value;
+  const hour  = parseInt(document.getElementById('hour').value);
+  const area  = document.getElementById('area').value;
+  const ctype = document.getElementById('complaint').value;
+
+  const errEl = document.getElementById('error-banner');
+  errEl.style.display = 'none';
+
+  if (!city || !day || !area || !ctype) {
+    errEl.textContent = 'Please select all fields before analysing.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const btn = document.getElementById('predict-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Analysing…';
+
+  try {
+    const res = await fetch(`${API}/predict`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ city, day_of_week: day, hour, area_context: area, complaint_type_clean: ctype }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || `Server error ${res.status}`);
+    }
+
+    const data = await res.json();
+    renderResult(data);
+
+  } catch (e) {
+    errEl.textContent = '❌ ' + e.message;
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = 'Analyse Risk';
+  }
+}
+
+// ── Render result ─────────────────────────────────────────────────────────────
+function renderResult(data) {
+  const level = data.predicted_risk_level || data.risk_awareness_level;   // 'high' | 'medium' | 'low'
+  const probabilities = data.probabilities || data.model_confidence || {};
+  const context = data.explanation_context || data.context;
+  const expl = data.explanation || {
+    risk_factors: data.key_risk_factors || [],
+    mitigating_factors: data.mitigating_factors || [],
+    data_limitations: data.data_limitations || [],
+  };
+
+  if (!level || !context) {
+    throw new Error('Unexpected prediction response from server.');
+  }
+
+  const icons = { high: '🔴', medium: '🟡', low: '🟢' };
+
+  // Risk badge
+  const badge = document.getElementById('risk-badge');
+  badge.className = `risk-badge ${level}`;
+  badge.innerHTML = `${icons[level] || ''} ${level.toUpperCase()}`;
+
+  // Probability bars
+  const probRow = document.getElementById('prob-row');
+  const classOrder = ['high', 'medium', 'low'];
+  probRow.innerHTML = classOrder.map(cls => {
+    const pct = ((probabilities[cls] || 0) * 100).toFixed(1);
+    return `
+      <div class="prob-item">
+        <span class="prob-name ${cls}">${cls.charAt(0).toUpperCase()+cls.slice(1)}</span>
+        <div class="prob-bar-bg">
+          <div class="prob-bar ${cls}" style="width:${pct}%"></div>
+        </div>
+        <span class="prob-pct ${cls}">${pct}%</span>
+      </div>`;
+  }).join('');
+
+  // Context grid
+  document.getElementById('ctx-grid').innerHTML = buildCtxGrid(context);
+
+  // Explanation — 3 sections
+  const makeSection = (items, cls, headingCls, headingIcon, headingText) => {
+    if (!items || items.length === 0) return '';
+    return `
+      <div class="expl-section">
+        <div class="expl-heading ${headingCls}">${headingIcon} ${headingText}</div>
+        <ul class="expl-list">
+          ${items.map(t => {
+            const icon = cls === 'risk' ? pickIcon(t, RISK_ICONS)
+                       : cls === 'mit'  ? pickIcon(t, MIT_ICONS)
+                       : 'ℹ️';
+            return `<li class="${cls}"><span class="expl-icon">${icon}</span>${t}</li>`;
+          }).join('')}
+        </ul>
+      </div>`;
+  };
+
+  let explHtml = '<div class="card-title">💡 Analysis</div>';
+  explHtml += makeSection(expl.risk_factors,       'risk', 'risk', '🔺', 'Key Risk Factors');
+  if (expl.risk_factors?.length && expl.mitigating_factors?.length)
+    explHtml += '<hr class="expl-divider">';
+  explHtml += makeSection(expl.mitigating_factors, 'mit',  'mit',  '✅', 'Mitigating Factors');
+  if (expl.data_limitations?.length && (expl.risk_factors?.length || expl.mitigating_factors?.length))
+    explHtml += '<hr class="expl-divider">';
+  explHtml += makeSection(expl.data_limitations,   'lim',  'lim',  'ℹ️', 'Data Limitations');
+  document.getElementById('explanation-card').innerHTML = explHtml;
+
+  // Warning & disclaimer
+  document.getElementById('warning-text').textContent    = data.warning || '';
+  document.getElementById('disclaimer-text').textContent = data.disclaimer;
+
+  // Show result section and scroll to it
+  const resultEl = document.getElementById('result-section');
+  resultEl.style.display = 'block';
+  resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+loadMetadata().catch(err => {
+  document.getElementById('error-banner').textContent =
+    '⚠️ Could not connect to backend. Make sure the server is running on port 8000.';
+  document.getElementById('error-banner').style.display = 'block';
+});
+</script>
+</body>
+</html>

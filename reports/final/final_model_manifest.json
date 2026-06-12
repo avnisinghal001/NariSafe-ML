@@ -1,0 +1,39 @@
+{
+  "project": "NariSafe",
+  "created_at": "2026-06-12T11:15:49.771570",
+  "final_model_name": "No-location HistGradientBoosting with high-risk threshold tuning",
+  "model_bundle_path": "models/no_location_baselines/best_no_location_threshold_model.joblib",
+  "model_type": "HistGradientBoostingClassifier",
+  "prediction_type": "risk awareness level",
+  "target": "risk_level",
+  "classes": [
+    "high",
+    "low",
+    "medium"
+  ],
+  "selected_high_risk_threshold": 0.2,
+  "removed_features": [
+    "city",
+    "latitude",
+    "longitude"
+  ],
+  "why_removed_features": "Removed direct location identity to test whether the model can learn general contextual risk patterns instead of memorizing cities.",
+  "primary_evaluation_split": "group_city",
+  "why_group_city_split": "Group-city split tests generalization to unseen cities and is more honest than random split for this synthetic-expanded dataset.",
+  "final_metrics_from_threshold_tuning_csv": {
+    "threshold": 0.2,
+    "accuracy": 0.833819,
+    "macro_f1": 0.766774,
+    "weighted_f1": 0.831308,
+    "high_precision": 0.936561,
+    "high_recall": 0.494709,
+    "high_f1": 0.647432
+  },
+  "important_limitations": [
+    "risk_level is a rule-based proxy label, not real incident-level ground truth.",
+    "The model is a risk-awareness prototype, not a guaranteed crime prediction system.",
+    "NCRB/OpenCity crime data is city-level, not hyperlocal incident-level data.",
+    "OSM infrastructure features may be incomplete, especially street-light data.",
+    "Prediction probabilities should be treated as model confidence, not real-world probability of crime."
+  ]
+}

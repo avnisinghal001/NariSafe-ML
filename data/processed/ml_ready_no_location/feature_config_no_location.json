@@ -1,0 +1,53 @@
+{
+  "target_column": "risk_level",
+  "categorical_features": [
+    "day_of_week",
+    "time_bucket",
+    "area_context",
+    "complaint_type_clean",
+    "crowd_density"
+  ],
+  "numeric_features": [
+    "is_weekend",
+    "hour",
+    "complaint_type_count",
+    "complaint_type_share",
+    "women_crime_2021",
+    "women_crime_2022",
+    "women_crime_2023",
+    "population_lakhs",
+    "women_crime_rate_2023",
+    "chargesheeting_rate_2023",
+    "women_crime_growth_21_23",
+    "police_station_count_5km",
+    "nearest_police_station_km",
+    "public_transport_count_3km",
+    "bus_stop_count_3km",
+    "bus_station_count_3km",
+    "railway_station_count_3km",
+    "street_light_count_2km",
+    "road_length_km_5km",
+    "road_density_km_per_sqkm_5km",
+    "commercial_landuse_count_5km",
+    "residential_landuse_count_5km",
+    "industrial_landuse_count_5km",
+    "retail_landuse_count_5km",
+    "education_poi_count_5km",
+    "lighting_data_available",
+    "lighting_score",
+    "police_access_score",
+    "transport_access_score",
+    "urban_density_score",
+    "complaint_severity"
+  ],
+  "dropped_features": [
+    "city",
+    "latitude",
+    "longitude"
+  ],
+  "notes": [
+    "This dataset removes city, latitude, and longitude.",
+    "Purpose: test whether the model can learn general contextual safety patterns without direct city identity.",
+    "Use group-city split for honest evaluation."
+  ]
+}
