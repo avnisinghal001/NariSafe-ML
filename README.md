@@ -1,6 +1,6 @@
 # NariSafe — Women Safety Risk Awareness
 
-**Live Demo:** https://narisafe-risk-awareness.streamlit.app/
+**Live Demo:** https://narisafe-risk-awareness.streamlit.app
 
 NariSafe is a public-data-based women safety risk-awareness prototype for Indian cities.
 
